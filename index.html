@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Recursion Tree Visualizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="panel hero-intro">
+        <div class="hero-copy">
+          <p class="eyebrow">Live Recursion Tree Visualizer</p>
+          <h1>Trace recursive Python clearly, step by step.</h1>
+          <p class="hero-lead">
+            Paste a recursive function, choose the starting call, and follow the tree,
+            highlighted source line, local variable updates, and return values in one place.
+          </p>
+
+          <div class="hero-highlights">
+            <article class="hero-highlight">
+              <strong>Live Tree</strong>
+              <span>Adaptive spacing, return arrows, and zoom keep large recursion trees readable.</span>
+            </article>
+            <article class="hero-highlight">
+              <strong>Sequential Trace</strong>
+              <span>Current step, variable changes, active frame, and call stack stay synchronized.</span>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hero-note">
+        <p class="section-kicker">Quick Start</p>
+        <h2>Give the visualizer one starting call.</h2>
+
+        <div class="hero-steps">
+          <div class="hero-step">
+            <span class="hero-step-number">1</span>
+            <div>
+              <strong>Paste Python</strong>
+              <p>Add one or more recursive <code>def name(...):</code> functions in the editor.</p>
+            </div>
+          </div>
+
+          <div class="hero-step">
+            <span class="hero-step-number">2</span>
+            <div>
+              <strong>Choose the call</strong>
+              <p>Enter a start call like <code>fib(5)</code> or let the app suggest one for you.</p>
+            </div>
+          </div>
+
+          <div class="hero-step">
+            <span class="hero-step-number">3</span>
+            <div>
+              <strong>Read the trace</strong>
+              <p>Watch calls, returns, variables, and source lines update together in order.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-tip">
+          <strong>Best for:</strong>
+          <span>recursive Python functions that use calls, base cases, loops, and local variables.</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel editor-panel">
+      <div class="panel-head">
+        <div class="panel-head-copy">
+          <p class="section-kicker">Editor</p>
+          <h2>Python Code + Live Runner</h2>
+          <p class="panel-subcopy">
+            Paste your function on the left, keep the starting call on the right, and the trace
+            rebuilds as the code changes.
+          </p>
+        </div>
+        <div class="sample-buttons" id="sampleButtons"></div>
+      </div>
+
+      <div class="editor-grid">
+        <label class="editor-field editor-code">
+          <span class="editor-label">Recursive Python</span>
+          <textarea id="codeInput" spellcheck="false"></textarea>
+        </label>
+
+        <div class="editor-side">
+          <label class="editor-field">
+            <span class="editor-label">Start Call</span>
+            <input id="callInput" type="text" spellcheck="false" placeholder="fib(5)">
+          </label>
+
+          <div class="control-strip">
+            <button class="control-button primary" id="runBtn" type="button">Run Live</button>
+            <button class="control-button" id="playBtn" type="button">Play</button>
+            <button class="control-button" id="prevBtn" type="button">Previous</button>
+            <button class="control-button" id="nextBtn" type="button">Next</button>
+            <button class="control-button" id="restartBtn" type="button">Restart</button>
+
+            <label class="speed-block" for="speedSelect">
+              <span>Speed</span>
+              <select id="speedSelect">
+                <option value="1400">Slow</option>
+                <option value="900" selected>Normal</option>
+                <option value="550">Fast</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="error-box hidden" id="errorBox"></div>
+          <div class="summary-card" id="summaryCard"></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="panel tree-panel">
+        <div class="panel-head">
+          <div class="panel-head-copy">
+            <p class="section-kicker">Live Tree</p>
+            <h2 id="treeTitle">Run a sample to draw the tree</h2>
+            <p class="panel-subcopy">
+              Calls grow downward, return arrows bend back upward, and zoom helps with deeper trees.
+            </p>
+          </div>
+          <div class="tree-tools">
+            <div class="tree-zoom">
+              <button class="zoom-button" id="zoomOutBtn" type="button" aria-label="Zoom out">-</button>
+              <button class="zoom-button" id="zoomResetBtn" type="button">100%</button>
+              <button class="zoom-button" id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+            </div>
+            <div class="tree-playback-controls" aria-label="Tree playback controls">
+              <button class="control-button" id="treePrevBtn" type="button">Previous</button>
+              <button class="control-button primary" id="treePlayBtn" type="button">Play</button>
+              <button class="control-button" id="treeNextBtn" type="button">Next</button>
+              <button class="control-button" id="treeRestartBtn" type="button">Restart</button>
+            </div>
+            <div class="tree-meta" id="treeMeta"></div>
+          </div>
+        </div>
+        <div class="tree-stage" id="treeStage">
+          <svg id="treeSvg" role="img" aria-label="Live recursion tree"></svg>
+        </div>
+      </section>
+
+      <aside class="panel detail-panel">
+        <section class="info-card step-card">
+          <div class="info-head">
+            <div>
+              <p class="section-kicker">Current Step</p>
+              <h3 id="stepTitle">Waiting for execution</h3>
+            </div>
+            <div class="mini-pill" id="stepCounter">0 / 0</div>
+          </div>
+          <p class="step-line" id="stepLine">Line -</p>
+          <p class="step-explanation" id="stepExplanation">
+            Run a recursive function to see the line-by-line explanation here.
+          </p>
+        </section>
+
+        <section class="info-card updates-card">
+          <div class="info-head">
+            <h3>Variable updates</h3>
+            <span class="mini-pill" id="changeCount">0 changes</span>
+          </div>
+          <div class="change-list" id="variableChanges"></div>
+        </section>
+
+        <section class="info-card frame-card">
+          <div class="info-head">
+            <h3>Active frame</h3>
+            <span class="mini-pill" id="frameLabel">No frame</span>
+          </div>
+          <div class="variable-table" id="activeFrameTable"></div>
+        </section>
+
+        <section class="info-card stack-card">
+          <div class="info-head">
+            <h3>Call stack</h3>
+            <span class="mini-pill" id="stackDepth">0 frames</span>
+          </div>
+          <div class="stack-list" id="callStack"></div>
+        </section>
+      </aside>
+
+      <section class="panel code-panel">
+        <div class="panel-head">
+          <div class="panel-head-copy">
+            <p class="section-kicker">Source View</p>
+            <h2>Highlighted line from the Python code</h2>
+            <p class="panel-subcopy">
+              The active source line stays aligned with the current step in the recursion tree.
+            </p>
+          </div>
+          <div class="mini-pill" id="codeMeta">Python</div>
+        </div>
+        <div class="code-viewer" id="codeViewer"></div>
+      </section>
+
+      <section class="panel timeline-panel">
+        <div class="panel-head">
+          <div class="panel-head-copy">
+            <p class="section-kicker">Timeline</p>
+            <h2>Jump through the recursion trace</h2>
+            <p class="panel-subcopy">
+              Use the timeline cards to move through the execution in a predictable sequence.
+            </p>
+          </div>
+        </div>
+        <div class="timeline-track" id="timelineTrack"></div>
+      </section>
+    </main>
+
+    <footer class="site-credit" aria-label="Site credit">
+      <div class="site-credit-inner">
+        <span>Created by: <strong>Manikanta Kalidindi</strong></span>
+        <details class="credit-contact">
+          <summary>Show contact</summary>
+          <span>manikalidindi1010@gmail.com</span>
+        </details>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
